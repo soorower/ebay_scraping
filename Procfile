@@ -1,1 +1,1 @@
-worker: python twitch_scraper.py
+worker: python ebay_scraper.py
