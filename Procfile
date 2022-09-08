@@ -1,0 +1,1 @@
+worker: python twitch_scraper.py

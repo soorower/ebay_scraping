@@ -1,1 +1,1 @@
-# ebay_scraping
+# flippa-auto-scrape
