@@ -19,9 +19,9 @@ def threading(links):
                 # print(soup.title.text)
                 res_html.append(response.content)
     def main():
-        with ThreadPoolExecutor(max_workers=150) as executor:
+        with ThreadPoolExecutor(max_workers=50) as executor:
             with requests.Session() as session:
-                adapter = requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=100)
+                adapter = requests.adapters.HTTPAdapter(pool_connections=50, pool_maxsize=50)
                 session.mount('http://', adapter)
                 session.mount('https://', adapter)
                 session.headers.update({'Connection':'Keep-Alive'})
@@ -66,19 +66,19 @@ def scrape():
         final_list =[] 
         lists = product_search_links
         print(len(product_search_links))
-        loop = int(len(lists)/100)
+        loop = int(len(lists)/20)
         if loop==0:
             loop = 1
-        i_list = [x*100+100 for x in range(loop)]
-        k_list = [x*100 for x in range(loop)]
-        count = 100
+        i_list = [x*20+20 for x in range(loop)]
+        k_list = [x*20 for x in range(loop)]
+        count = 20
         for i,k in zip(i_list,k_list):
             print(f'Scraping Products Data: {count}')
-            count = count + 100
+            count = count + 20
             new_five = lists[k:i]
             res_html = threading(new_five) # calling the thread
             final_list = final_list + res_html
-        if loop*100<len(lists):
+        if loop*20<len(lists):
             print(f'Scraping Products Data: rest')
             last_five = lists[i_list[-1]:]
             res_html = threading(last_five) # calling the thread
