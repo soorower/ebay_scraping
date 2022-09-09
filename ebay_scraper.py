@@ -19,16 +19,18 @@ def threading(links):
             if response.status_code == 200:
                 res_html.append(response.content)
     def main():
-        with ThreadPoolExecutor(max_workers=110) as executor:
+        
             # with requests.Session() as session:
                 # adapter = requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=100)
                 # session.mount('http://', adapter)
                 # session.mount('https://', adapter)
                 # session.headers.update({'Connection':'Keep-Alive'})
 
-            for link in links:
-                executor.map(fetch, [requests], [link])
-                executor.shutdown(wait=True)
+        for link in links:
+            with ThreadPoolExecutor(max_workers=50) as executor:
+                with requests.Session() as session:
+                    executor.map(fetch, [session], [link])
+                    executor.shutdown(wait=True)
     main()
     return res_html
 #--connecting g.sheet------------
