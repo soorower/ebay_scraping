@@ -55,6 +55,7 @@ def threading(links):
                 for link in links:
                     executor.map(fetch, [session], [link])
                 executor.shutdown(wait=True)
+        executor.shutdown(wait=True)
     main()
     return res_html
 
@@ -85,6 +86,7 @@ def scrape(product_search_links,num):
             new_five = lists[k:i]
             res_html = threading(new_five) # calling the thread
             final_list = final_list + res_html
+            sleep(120)
         if loop*500<len(lists):
             print(f'Scraping Products Data: rest')
             last_five = lists[i_list[-1]:]
@@ -99,6 +101,7 @@ def scrape(product_search_links,num):
 
     row_check = []
     product_update = []
+    print(len(final_list))
     for html in final_list:
         try:
             try:
@@ -228,8 +231,8 @@ def scrape(product_search_links,num):
                 # print(feedback)
             except:
                 price = ''
-            available = ''
-            feedback = ''
+                available = ''
+                feedback = ''
         else:
             price = ''
             available = ''
