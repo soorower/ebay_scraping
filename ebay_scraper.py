@@ -1,3 +1,4 @@
+from itertools import count
 import requests
 from bs4 import BeautifulSoup as bs
 from time import sleep
@@ -25,12 +26,16 @@ def threading(links):
                 # session.mount('http://', adapter)
                 # session.mount('https://', adapter)
                 # session.headers.update({'Connection':'Keep-Alive'})
-
-        for link in links:
-            with ThreadPoolExecutor(max_workers=50) as executor:
-                with requests.Session() as session:
-                    executor.map(fetch, [session], [link])
+        count = 0
+        
+        executor = ThreadPoolExecutor(max_workers=50)
+        with requests.Session() as session:
+            for link in links:
+                count = count + 1
+                executor.map(fetch, [session], [link])
+                if count == 10 or count == 20 or count == 30 or count == 40:
                     executor.shutdown(wait=True)
+                    executor = ThreadPoolExecutor(max_workers=50)
     main()
     return res_html
 #--connecting g.sheet------------
