@@ -41,56 +41,51 @@ def threading(links):
     def fetch(session, url):
         with session.get(url) as response:
             if response.status_code == 200:
+                # soup = bs(response.content,'html.parser')
+                # print(soup.title.text)
                 res_html.append(response.content)
     def main():
-        
-            # with requests.Session() as session:
-                # adapter = requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=100)
-                # session.mount('http://', adapter)
-                # session.mount('https://', adapter)
-                # session.headers.update({'Connection':'Keep-Alive'})
-        count = 0
-        counter = [x for x in range(50) if x%10==0][1:]
-        executor = ThreadPoolExecutor(max_workers=50)
-        with requests.Session() as session:
-            for link in links:
-                count = count + 1
-                executor.map(fetch, [session], [link])
-                if count in counter:
-                    executor.shutdown(wait=True)
-                    executor = ThreadPoolExecutor(max_workers=50)
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            with requests.Session() as session:
+                adapter = requests.adapters.HTTPAdapter(pool_connections=10, pool_maxsize=10)
+                session.mount('http://', adapter)
+                session.mount('https://', adapter)
+                session.headers.update({'Connection':'Keep-Alive'})
+
+                for link in links:
+                    executor.map(fetch, [session], [link])
+                executor.shutdown(wait=True)
     main()
     return res_html
 
 
 
 
-def product_update():
+def product_update(num):
     product_list_to_u = worksheet3.col_values(2)[1:]
     prod_up = [[name] for name in product_list_to_u]
-    worksheet.update('A2:A100000', prod_up)
+    worksheet.update(f'A{num}:A100000', prod_up)
     sleep(0.5)
 
-def scrape(product_search_links):
+def scrape(product_search_links,num):
     #--------------------------------
     def send_links(product_search_links):
         final_list =[] 
         lists = product_search_links
         print(len(product_search_links))
-        loop = int(len(lists)/50)
+        loop = int(len(lists)/2)
         if loop==0:
             loop = 1
-        i_list = [x*50+50 for x in range(loop)]
-        k_list = [x*50 for x in range(loop)]
-        count = 50
+        i_list = [x*2+2 for x in range(loop)]
+        k_list = [x*2 for x in range(loop)]
+        count = 2
         for i,k in zip(i_list,k_list):
             print(f'Scraping Products Data: {count}')
-            count = count + 50
+            count = count + 2
             new_five = lists[k:i]
             res_html = threading(new_five) # calling the thread
             final_list = final_list + res_html
-            sleep(2)
-        if loop*50<len(lists):
+        if loop*2<len(lists):
             print(f'Scraping Products Data: rest')
             last_five = lists[i_list[-1]:]
             res_html = threading(last_five) # calling the thread
@@ -182,7 +177,7 @@ def scrape(product_search_links):
         list_to_check[row] = link
     list_of_product_links_to_upload = [[link] for link in list_to_check]
     print(list_of_product_links_to_upload)
-    worksheet.update('B2:B100000', list_of_product_links_to_upload)
+    worksheet.update(f'B{num}:B100000', list_of_product_links_to_upload)
 
 
 
@@ -246,10 +241,10 @@ def scrape(product_search_links):
         feedback = ''
 
 
-    worksheet.update('C2:E100000', rows_to_add)
+    worksheet.update(f'C{num}:E100000', rows_to_add)
 
     datetimes = str(datetime.datetime.now())[:19]
-    worksheet.update(f'G6', f'Scraping each product "Ended"..at {datetimes}')
+    # worksheet.update(f'G6', f'Scraping each product "Ended"..at {datetimes}')
 
     #--Price Update------------------------------------------------
     print('Updting Prices By Markup')
@@ -323,11 +318,11 @@ def scrape(product_search_links):
             each.append(new_price)
             prices_to_update.append(each)
 
-    worksheet.update('F2:F100000', prices_to_update)
+    worksheet.update(f'F{num}:F100000', prices_to_update)
     worksheet.update(f'G9', f'Done! Adding Markup To Prices')
     print('All Done!')
 
-def price_quantity_update():
+def price_quantity_update(num):
     mark_prices = worksheet.col_values(6)[1:]
     quantities = worksheet.col_values(4)[1:]
     quantity = []
@@ -339,19 +334,26 @@ def price_quantity_update():
     
     quant_up = [[quant] for quant in quantity]
     mark_pr = [[mark_p] for mark_p in mark_prices]
-    worksheet3.update('R2:R100000', quant_up)
-    worksheet3.update('U2:U100000', mark_pr)
+    worksheet3.update(f'R{num}:R100000', quant_up)
+    worksheet3.update(f'U{num}:U100000', mark_pr)
     sleep(22000)
 
 
 
 while True:
     product_search_urls = product_search_links[:1000]
-    product_update()
-    scrape(product_search_urls)
-    price_quantity_update()
-
-
+    num = 2
+    product_update(num)
+    scrape(product_search_urls,num)
+    price_quantity_update(num)
+    #--------2------------------------------------------------------------
+    product_search_urls = product_search_links[1000:2000]
+    num = 1002
+    product_update(num)
+    scrape(product_search_urls,num)
+    price_quantity_update(num)
+    datetimes = str(datetime.datetime.now())[:19]
+    worksheet.update(f'G6', f'Scraping each product "Ended"..at {datetimes}')
     
     r = requests.get('https://www.timeanddate.com/worldclock/bangladesh/dhaka',headers= headers)
     soup = bs(r.content, 'html.parser')
