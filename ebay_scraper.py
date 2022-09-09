@@ -28,7 +28,7 @@ def threading(links):
 
             for link in links:
                 executor.map(fetch, [requests], [link])
-            executor.shutdown(wait=True)
+                executor.shutdown(wait=True)
     main()
     return res_html
 #--connecting g.sheet------------
