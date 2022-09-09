@@ -10,27 +10,7 @@ datetimes = str(datetime.datetime.now())[:19]
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36'
 }
-def threading(links):
-    res_html = []
-    def fetch(session, url):
-        with session.get(url) as response:
-            if response.status_code == 200:
-                # soup = bs(response.content,'html.parser')
-                # print(soup.title.text)
-                res_html.append(response.content)
-    def main():
-        with ThreadPoolExecutor(max_workers=50) as executor:
-            with requests.Session() as session:
-                adapter = requests.adapters.HTTPAdapter(pool_connections=50, pool_maxsize=50)
-                session.mount('http://', adapter)
-                session.mount('https://', adapter)
-                session.headers.update({'Connection':'Keep-Alive'})
 
-                for link in links:
-                    executor.map(fetch, [session], [link])
-                executor.shutdown(wait=True)
-    main()
-    return res_html
 #--connecting g.sheet------------
 scopes = ["https://spreadsheets.google.com/feeds",
                   "https://www.googleapis.com/auth/spreadsheets",
@@ -62,42 +42,23 @@ def scrape():
         product_search_links.append(search_url)
 
     
-    def send_links(product_search_links):
-        final_list =[] 
-        lists = product_search_links
-        print(len(product_search_links))
-        loop = int(len(lists)/20)
-        if loop==0:
-            loop = 1
-        i_list = [x*20+20 for x in range(loop)]
-        k_list = [x*20 for x in range(loop)]
-        count = 20
-        for i,k in zip(i_list,k_list):
-            print(f'Scraping Products Data: {count}')
-            count = count + 20
-            new_five = lists[k:i]
-            res_html = threading(new_five) # calling the thread
-            final_list = final_list + res_html
-        if loop*20<len(lists):
-            print(f'Scraping Products Data: rest')
-            last_five = lists[i_list[-1]:]
-            res_html = threading(last_five) # calling the thread
-            final_list = final_list + res_html
-            sleep(0.5)
-        return final_list
-    final_list = send_links(product_search_links)
+    
     datetimes = str(datetime.datetime.now())[:19]
     worksheet.update(f'G3', f'"Searching" each product Ended..at {datetimes}')
 
 
     row_check = []
     product_update = []
-    for html in final_list:
+    count = 1
+    for link in product_search_links:
+        print(f'[{count}/{len(product_search_links)}] scraping: {link}')
+        count = count + 1
         try:
+            r = requests.get(link,headers = headers)
             try:
-                final_html = str(html).split('class="clearfix srp-controls__row-2"')[1]
+                final_html = str(r.content).split('class="clearfix srp-controls__row-2"')[1]
             except:
-                final_html = str(html).split('class="s-answer-region s-answer-region-center-top"')[1]
+                final_html = str(r.content).split('class="s-answer-region s-answer-region-center-top"')[1]
             soup = bs(final_html,'html.parser')
 
             product_name = soup.findAll('span',attrs = {'class':'BOLD'})[1].text
@@ -337,6 +298,9 @@ while True:
     product_update()
     scrape()
     price_quantity_update()
+
+
+    
     r = requests.get('https://www.timeanddate.com/worldclock/bangladesh/dhaka',headers= headers)
     soup = bs(r.content, 'html.parser')
     date = soup.find('span',attrs={'id':'ctdat'}).text.lower()
