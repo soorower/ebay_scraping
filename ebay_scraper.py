@@ -27,15 +27,16 @@ def threading(links):
                 # session.mount('https://', adapter)
                 # session.headers.update({'Connection':'Keep-Alive'})
         count = 0
-        
+        counter = [x for x in range(50) if x%2==0]
         executor = ThreadPoolExecutor(max_workers=50)
         with requests.Session() as session:
             for link in links:
                 count = count + 1
                 executor.map(fetch, [session], [link])
-                if count == 10 or count == 20 or count == 30 or count == 40:
+                if count in counter:
                     executor.shutdown(wait=True)
-                    executor = ThreadPoolExecutor(max_workers=50)
+                    sleep(1)
+                    executor = ThreadPoolExecutor(max_workers=10)
     main()
     return res_html
 #--connecting g.sheet------------
@@ -85,12 +86,13 @@ def scrape():
             new_five = lists[k:i]
             res_html = threading(new_five) # calling the thread
             final_list = final_list + res_html
+            sleep(2)
         if loop*50<len(lists):
             print(f'Scraping Products Data: rest')
             last_five = lists[i_list[-1]:]
             res_html = threading(last_five) # calling the thread
             final_list = final_list + res_html
-            sleep(0.5)
+            sleep(2)
         return final_list
     final_list = send_links(product_search_links)
     datetimes = str(datetime.datetime.now())[:19]
