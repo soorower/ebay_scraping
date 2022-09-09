@@ -73,19 +73,19 @@ def scrape():
         final_list =[] 
         lists = product_search_links
         print(len(product_search_links))
-        loop = int(len(lists)/100)
+        loop = int(len(lists)/50)
         if loop==0:
             loop = 1
-        i_list = [x*100+100 for x in range(loop)]
-        k_list = [x*100 for x in range(loop)]
-        count = 100
+        i_list = [x*50+50 for x in range(loop)]
+        k_list = [x*50 for x in range(loop)]
+        count = 50
         for i,k in zip(i_list,k_list):
             print(f'Scraping Products Data: {count}')
-            count = count + 100
+            count = count + 50
             new_five = lists[k:i]
             res_html = threading(new_five) # calling the thread
             final_list = final_list + res_html
-        if loop*100<len(lists):
+        if loop*50<len(lists):
             print(f'Scraping Products Data: rest')
             last_five = lists[i_list[-1]:]
             res_html = threading(last_five) # calling the thread
