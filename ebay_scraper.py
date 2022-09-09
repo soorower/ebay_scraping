@@ -45,9 +45,9 @@ def threading(links):
                 # print(soup.title.text)
                 res_html.append(response.content)
     def main():
-        with ThreadPoolExecutor(max_workers=10) as executor:
+        with ThreadPoolExecutor(max_workers=150) as executor:
             with requests.Session() as session:
-                adapter = requests.adapters.HTTPAdapter(pool_connections=10, pool_maxsize=10)
+                adapter = requests.adapters.HTTPAdapter(pool_connections=150, pool_maxsize=150)
                 session.mount('http://', adapter)
                 session.mount('https://', adapter)
                 session.headers.update({'Connection':'Keep-Alive'})
@@ -73,19 +73,19 @@ def scrape(product_search_links,num):
         final_list =[] 
         lists = product_search_links
         print(len(product_search_links))
-        loop = int(len(lists)/2)
+        loop = int(len(lists)/500)
         if loop==0:
             loop = 1
-        i_list = [x*2+2 for x in range(loop)]
-        k_list = [x*2 for x in range(loop)]
-        count = 2
+        i_list = [x*500+500 for x in range(loop)]
+        k_list = [x*500 for x in range(loop)]
+        count = 500
         for i,k in zip(i_list,k_list):
             print(f'Scraping Products Data: {count}')
-            count = count + 2
+            count = count + 500
             new_five = lists[k:i]
             res_html = threading(new_five) # calling the thread
             final_list = final_list + res_html
-        if loop*2<len(lists):
+        if loop*500<len(lists):
             print(f'Scraping Products Data: rest')
             last_five = lists[i_list[-1]:]
             res_html = threading(last_five) # calling the thread
@@ -227,7 +227,9 @@ def scrape(product_search_links,num):
                 # print(available)
                 # print(feedback)
             except:
-                pass
+                price = ''
+            available = ''
+            feedback = ''
         else:
             price = ''
             available = ''
