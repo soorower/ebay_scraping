@@ -11,6 +11,29 @@ datetimes = str(datetime.datetime.now())[:19]
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36'
 }
+#--connecting g.sheet------------
+scopes = ["https://spreadsheets.google.com/feeds",
+                  "https://www.googleapis.com/auth/spreadsheets",
+                  "https://www.googleapis.com/auth/drive",
+                  "https://www.googleapis.com/auth/drive"]
+cred = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scopes)
+gc= authorize(cred)
+worksheet = gc.open("Ebay_Scraping").sheet1
+worksheet2 = gc.open("Ebay_Scraping").get_worksheet(1)
+worksheet3 = gc.open("products_export_1").get_worksheet(0)
+product_list = worksheet.col_values(1)[1:]
+datetimes = str(datetime.datetime.now())[:19]
+worksheet.update(f'G2', f'"Searching" {len(product_list)} products started..at {datetimes}')
+lower_list = []
+for product in product_list:
+    lower_list.append(product.lower())
+product_search_links = []
+for product_name in product_list:
+    product_name = product_name.replace(' ','+')
+    search_url = f'https://www.ebay.com/sch/i.html?_from=R40&_nkw={product_name}&_sacat=0&LH_TitleDesc=0&rt=nc&LH_ItemCondition=3'
+    product_search_links.append(search_url)
+
+
 
 #--connecting g.sheet------------
 def threading(links):
@@ -34,41 +57,22 @@ def threading(links):
                 count = count + 1
                 executor.map(fetch, [session], [link])
                 if count in counter:
-                    executor.shutdown(wait=False)
+                    executor.shutdown(wait=True)
                     executor = ThreadPoolExecutor(max_workers=50)
     main()
     return res_html
-#--connecting g.sheet------------
-scopes = ["https://spreadsheets.google.com/feeds",
-                  "https://www.googleapis.com/auth/spreadsheets",
-                  "https://www.googleapis.com/auth/drive",
-                  "https://www.googleapis.com/auth/drive"]
-cred = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scopes)
-gc= authorize(cred)
-worksheet = gc.open("Ebay_Scraping").sheet1
-worksheet2 = gc.open("Ebay_Scraping").get_worksheet(1)
-worksheet3 = gc.open("products_export_1").get_worksheet(0)
+
+
+
+
 def product_update():
     product_list_to_u = worksheet3.col_values(2)[1:]
     prod_up = [[name] for name in product_list_to_u]
     worksheet.update('A2:A100000', prod_up)
     sleep(0.5)
 
-def scrape():
+def scrape(product_search_links):
     #--------------------------------
-    product_list = worksheet.col_values(1)[1:]
-    datetimes = str(datetime.datetime.now())[:19]
-    worksheet.update(f'G2', f'"Searching" {len(product_list)} products started..at {datetimes}')
-    lower_list = []
-    for product in product_list:
-        lower_list.append(product.lower())
-    product_search_links = []
-    for product_name in product_list:
-        product_name = product_name.replace(' ','+')
-        search_url = f'https://www.ebay.com/sch/i.html?_from=R40&_nkw={product_name}&_sacat=0&LH_TitleDesc=0&rt=nc&LH_ItemCondition=3'
-        product_search_links.append(search_url)
-
-    
     def send_links(product_search_links):
         final_list =[] 
         lists = product_search_links
@@ -342,8 +346,9 @@ def price_quantity_update():
 
 
 while True:
+    product_search_urls = product_search_links[:1000]
     product_update()
-    scrape()
+    scrape(product_search_urls)
     price_quantity_update()
 
 
