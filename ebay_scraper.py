@@ -22,34 +22,9 @@ gc= authorize(cred)
 worksheet = gc.open("Ebay_Scraping").sheet1
 worksheet2 = gc.open("Ebay_Scraping").get_worksheet(1)
 worksheet3 = gc.open("products_export_1").get_worksheet(0)
-product_list = worksheet.col_values(1)[1:]
-datetimes = str(datetime.datetime.now())[:19]
-worksheet.update(f'G2', f'"Searching" {len(product_list)} products started..at {datetimes}')
-lower_list = []
-for product in product_list:
-    lower_list.append(product.lower())
-product_search_links = []
-for product_name in product_list:
-    product_name = product_name.replace(' ','+')
-    search_url = f'https://www.ebay.com/sch/i.html?_from=R40&_nkw={product_name}&_sacat=0&LH_TitleDesc=0&rt=nc&LH_ItemCondition=3'
-    product_search_links.append(search_url)
 
 
 
-def threading(links):
-    res_html = []
-    def fetch(session, url):
-        with session.get(url) as response:
-            if response.status_code == 200:
-                res_html.append(response.content)
-    def main():
-        with ProcessPoolExecutor(max_workers=10) as executor:
-            with requests.Session() as session:
-                for link in links:
-                    executor.map(fetch, [session], [link])
-                executor.shutdown(wait=True)
-    main()
-    return res_html
 
 
 
@@ -62,15 +37,26 @@ def product_update(num):
 
 def scrape(num):
     #--------------------------------
- 
+    product_list = worksheet.col_values(1)[1:]
     datetimes = str(datetime.datetime.now())[:19]
-    worksheet.update(f'G3', f'"Searching" each product Ended..at {datetimes}')
+    worksheet.update(f'G2', f'"Searching" {len(product_list)} products started..at {datetimes}')
+    lower_list = []
+    for product in product_list:
+        lower_list.append(product.lower())
+    product_search_links = []
+    for product_name in product_list:
+        product_name = product_name.replace(' ','+')
+        search_url = f'https://www.ebay.com/sch/i.html?_from=R40&_nkw={product_name}&_sacat=0&LH_TitleDesc=0&LH_BIN=1&rt=nc&LH_ItemCondition=3'
+        product_search_links.append(search_url)
 
-
+    #--------------------------------------------------------------
     row_check = []
     product_update = []
     s = requests.Session()
+    count = 1
     for link in product_search_links:
+        print(f'Scraping[{count}/{len(product_search_links)}]: {link}')
+        count = count + 1
         r  = s.get(link,headers=headers)
         try:
             try:
@@ -140,11 +126,11 @@ def scrape(num):
                 product_update.append(product_url)
         except:
             pass
-        
-    list_of_product_links_to_upload = []
-
-    list_to_check = ['' for i in range(len(product_search_links))]
     
+    datetimes = str(datetime.datetime.now())[:19]
+    worksheet.update(f'G3', f'"Searching" each product Ended..at {datetimes}')
+    list_of_product_links_to_upload = []
+    list_to_check = ['' for i in range(len(product_search_links))]
     for row,link in zip(row_check,product_update):
         list_to_check[row] = link
     list_of_product_links_to_upload = [[link] for link in list_to_check]
