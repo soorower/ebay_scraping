@@ -27,16 +27,15 @@ def threading(links):
                 # session.mount('https://', adapter)
                 # session.headers.update({'Connection':'Keep-Alive'})
         count = 0
-        counter = [x for x in range(50) if x%2==0]
+        counter = [x for x in range(50) if x%10==0][1:]
         executor = ThreadPoolExecutor(max_workers=50)
         with requests.Session() as session:
             for link in links:
                 count = count + 1
                 executor.map(fetch, [session], [link])
                 if count in counter:
-                    executor.shutdown(wait=True)
-                    sleep(1)
-                    executor = ThreadPoolExecutor(max_workers=10)
+                    executor.shutdown(wait=False)
+                    executor = ThreadPoolExecutor(max_workers=50)
     main()
     return res_html
 #--connecting g.sheet------------
